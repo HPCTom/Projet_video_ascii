@@ -11,7 +11,7 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 
 	IV : Finalement le programme s'execute comme suit:
 
-		Execution: ./modif_img argv[1] argv[2] argv[3]
+		Execution: ./modif_img argv[1] argv[2] argv[3] argv[4]
 
 		argv[1] = pourcentage de résolution de l'image entre 0 et 100 en largeur (100% indique qu'il y aura autant d'ascii en largeur que de pixels)
 		argv[2] = nombre d'ascii différents utilisés pour générer l'image (compris entre 1 et 10).
@@ -20,7 +20,7 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 
 		/!\ EXEMPLE : ./modif_img 50 10 0 1
 
-################################################################	Explication de l'executable Intsallation.sh	################################################################################
+##################################	Explication de l'executable Intsallation.sh	#################################################
 
 	1.	Pour pourvoir générer des PNG il faut installer ImageMagick: - sudo apt-get install imagemagick
 
@@ -40,4 +40,4 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 			- sudo apt install ffmpeg		(pour traiter le son et video)
 			- sudo pip install ffpyplayer		(pour traiter le son)
 
-##########################################################################################################################################################################################################
+#############################################################################################################################################

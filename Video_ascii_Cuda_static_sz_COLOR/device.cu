@@ -30,11 +30,8 @@ __global__ void Init_float_num(float *d_img, unsigned int width, unsigned int he
 
 
 
-__global__ void Niveau_Gris_Color_Moyennage(float *d_img_ascii,unsigned int* d_img,unsigned width,
-											int nb_sleep_thread_x,int nb_sleep_thread_y,
- 									  		int nb_sleep_thread_x_ascii,int nb_sleep_thread_y_ascii,
-									  		int gridDim_x_ascii,int gridDim_y_ascii,int blockDim_x_ascii,
-											int blockDim_y_ascii,int ite)
+__global__ void Niveau_Gris_Color_Moyennage(float *d_img_ascii,unsigned int* d_img,unsigned width,int nb_sleep_thread_x,int nb_sleep_thread_y,
+									  		int gridDim_x_ascii,int blockDim_x_ascii,int blockDim_y_ascii)
 {
 	if(blockIdx.y < gridDim.y-1 || blockIdx.y == gridDim.y-1 && threadIdx.y < blockDim.y-nb_sleep_thread_y){
 		if(blockIdx.x < gridDim.x-1 || blockIdx.x == gridDim.x-1 && threadIdx.x < blockDim.x-nb_sleep_thread_x){

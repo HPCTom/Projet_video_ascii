@@ -45,10 +45,8 @@ __host__ void ARG_ERROR(int argc,char argv1,char argv2){
     printf("Pas de problèmes dans les arguments \n");
   }
 
-
-
-
 }
+
 
 //#### Declaration des parametres
 __host__ void declaration_1(FIBITMAP *bitmap,unsigned *width,unsigned *height,unsigned *pitch){
@@ -112,24 +110,27 @@ __host__ void declaration_3(unsigned int blockDim_x_color,unsigned int blockDim_
 }
 
 
-void init_barre_chargement(char *barre,int *cpt,float eps,int max_it){
+void init_barre_chargement(char *barre,int *taille,float *eps,int *max_it,const char *nbr_img){
+  *max_it = atoi(nbr_img);
+  *taille = 0;
+  *eps = 1.5;
   strcat(barre, " [");
-  while(barre[*cpt]!='\0'){
-    *cpt = *cpt+1;
+  while(barre[*taille]!='\0'){
+    *taille = *taille+1;
   }
-  int taille = (int)ceil(100./eps); //nombre de #
+  int taille_intervalle = (int)ceil(100./(*eps)); //nombre de #
 
-  for(int t=0;t<taille;t++){
+  for(int t=0;t<taille_intervalle;t++){
     strcat(barre, " ");
   }
   strcat(barre, "]");
 }
 
-void barre_chargement(char *barre,float p,int k, float max, float eps,int taille){ //entier entre 0 et 100
+void barre_chargement(char *barre,float p,int k, int max_it, float eps,int taille){ //entier entre 0 et 100
 
   int idx = (int)(p/eps); // a quelle intervalle j'appartiens
 
-  if(k==max){
+  if(k==max_it){
     for(int k=taille; k<taille+idx+1; k++){
       barre[k] = '#';
     }
@@ -185,42 +186,66 @@ __host__ void SAVE_IMG(unsigned char *img,unsigned int height,unsigned int width
   char PathDest[size_PathDest];                            // nom de l'image png de sortie
   sprintf(PathDest,"images_ascii/frame%d.png", num);
 
-  // for(int kk = 0; kk<sizeof(PathDest)+1;kk++){
-  //   printf("%c",PathDest[kk]);
-  // }
-
-	// BYTE* bits = (BYTE*)FreeImage_GetBits(bitmap);
   RGBQUAD newcolor;
 
   for ( int y =0; y<height; y++)
   {
-    // BYTE *pixel = (BYTE*)bits;
     for ( int x =0; x<width; x++)
     {
-      // RGBQUAD newcolor;
 
       int idx = ((y * width) + x) * 3;
 
-      // printf("pitch =  %d, height = %d, width = %d \n",pitch,height,width);
-      // if(num == 0){
-      //   printf("\nimg[idx + 0] = %d \n",img[idx + 0]);
-      //   printf("img[idx + 1] = %d \n",img[idx + 1]);
-      //   printf("img[idx + 2] = %d \n",img[idx + 2]);
-      // }
-      // // printf("%d ",*bitmap);
       newcolor.rgbRed = img[idx + 0];
       newcolor.rgbGreen = img[idx + 1];
       newcolor.rgbBlue = img[idx + 2];
 
       if(!FreeImage_SetPixelColor(bitmap, x, y, &newcolor))
-      { fprintf(stderr, "(%d, %d) Fail...\n", x, y); }
+      { fprintf(stderr, "(%d, %d) Fail allocation 2...\n", x, y); }
 
-      // pixel+=3;
     }
-    // next line
-    // bits += pitch;
   }
-  if( FreeImage_Save (FIF_PNG, bitmap , PathDest , 0 ))
-  FreeImage_DeInitialise(); //Cleanup !
+  FreeImage_Save (FIF_PNG, bitmap , PathDest , 0 );
 }
+
+
+__host__ void data_preparation( FIBITMAP **bitmap,unsigned int *width,unsigned int *height,unsigned int *pitch,unsigned long *sz_in_bytes,unsigned int **img,unsigned int **d_img,
+                                unsigned int *blockDim_x,unsigned int *blockDim_y,unsigned int* gridDim_x,unsigned int *gridDim_y,unsigned int *blockDim_x_ascii,unsigned int *blockDim_y_ascii,
+                                unsigned int *gridDim_x_ascii,unsigned int *gridDim_y_ascii,unsigned int *nb_sleep_thread_x,unsigned int *nb_sleep_thread_y,unsigned int *nb_sleep_thread_x_ascii,
+                                unsigned int *nb_sleep_thread_y_ascii,float argv1,long unsigned int *sz_in_bytes_img_ascii,float **img_ascii,float **d_img_ascii,struct lib_ascii ascii,unsigned int *blockDim_x_color, 
+                                unsigned int *blockDim_y_color,unsigned int *gridDim_x_color,unsigned int *gridDim_y_color,unsigned int *nb_sleep_thread_x_color,unsigned int *nb_sleep_thread_y_color,
+                                unsigned long *sz_in_bytes_ascii_color,unsigned int *width_color,unsigned int *height_color,unsigned char **img_ascii_color_final,unsigned char **d_img_ascii_color_final,FIBITMAP **bitmap_final,unsigned int *pitch_final)
+{
+  FreeImage_Initialise();
+  
+  char PathName_data_prep[100] = "images/frame0.jpg";
+  FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(PathName_data_prep);
+  *bitmap = FreeImage_Load(FIF_JPEG, PathName_data_prep, 0);
+
+  declaration_1(*bitmap,width,height,pitch);
+  *sz_in_bytes = sizeof(unsigned int) * 3 * (*width) * (*height); //nb de valeurs pour toute image
+  *img = (unsigned int*) malloc(*sz_in_bytes);
+  cudaMalloc((void**)&*d_img, *sz_in_bytes);
+
+  declaration_2(*width,*height,blockDim_x,blockDim_y,gridDim_x,gridDim_y,blockDim_x_ascii,blockDim_y_ascii,gridDim_x_ascii,gridDim_y_ascii,
+               nb_sleep_thread_x,nb_sleep_thread_y,nb_sleep_thread_x_ascii,nb_sleep_thread_y_ascii,argv1);
+  *sz_in_bytes_img_ascii = sizeof(float)*(*gridDim_x_ascii)*(*gridDim_y_ascii);
+  *img_ascii = (float*) malloc(*sz_in_bytes_img_ascii);
+  cudaMalloc((void**)&*d_img_ascii, 4*(*sz_in_bytes_img_ascii));
+
+  *blockDim_x_color = ascii.kwidthCaracter; // 7 
+  *blockDim_y_color = ascii.kheightCaracter; // 11
+  *nb_sleep_thread_x_color = *nb_sleep_thread_x_ascii;
+  *nb_sleep_thread_y_color = *nb_sleep_thread_y_ascii;
+  declaration_3(*blockDim_x_color,*blockDim_y_color,gridDim_x_color,gridDim_y_color,*gridDim_x_ascii,*gridDim_y_ascii,sz_in_bytes_ascii_color,
+                width_color,height_color);
+
+  *img_ascii_color_final = (unsigned char*) malloc(*sz_in_bytes_ascii_color);
+  cudaMalloc((void **)&*d_img_ascii_color_final, *sz_in_bytes_ascii_color); 
+  *bitmap_final = FreeImage_Allocate(*width_color,*height_color, 24);
+  *pitch_final = FreeImage_GetPitch(*bitmap_final);
+
+  FreeImage_DeInitialise();
+
+}
+
 

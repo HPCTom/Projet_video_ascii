@@ -29,7 +29,7 @@ static char num[10];                                                            
 static char barre[200] = "Traitement ascii des images";                                   //
 static float eps;                                                                         // pourcentage équivalent à 1 '#' dans la barre de chargement
 static int taille;                                                                        //
-static float max_it;                                                                      //
+static int max_it;                                                                      //
 // Pour le traitement d'images //
 static unsigned int blockDim_x;                                                           //
 static unsigned int blockDim_y;                                                           //
@@ -53,7 +53,7 @@ static char *final_ascii;                                                       
 static unsigned int *d_img;                                                               // pointeur
 static const char *use_ascii;                                                             // pointeur du tableau des ascii qui seront utilisés dans l'image (trié par ordre de niveau de gris croissant)
 static unsigned char *d_tab_ascii_lib;                                                    //
-float *d_img_ascii;                                                                       // pointeur
+static float *d_img_ascii;                                                                       // pointeur
 static unsigned char *d_img_ascii_color_final;                                            //
 
 static unsigned int gridDim_x_ascii;                                                      // largeur de l'image en nombre d'ascii
@@ -73,6 +73,8 @@ static unsigned int gridDim_x_color;                                            
 static unsigned int gridDim_y_color;                                                      //
 
 FIBITMAP *bitmap_final;
+FIBITMAP *bitmap;
+FREE_IMAGE_FORMAT fif;
 
 float *temp_img;
 
@@ -95,8 +97,6 @@ int main (int argc , char** argv)
    start = get_time();
    // ############ Librairie ascii ############
    use_ascii = "8$&03421*! "; // 11
-   // use_ascii = "8@&0$a{+*! "; // 11
-   //   use_ascii = " !*12430&$8";
    nb_characters = strlen(use_ascii);
    lib_ascii ascii{use_ascii, use_ascii + nb_characters};
    affiche_ascii(ascii);
@@ -125,91 +125,43 @@ int main (int argc , char** argv)
    pclose(f_img);
 
    // Pour la barre de chargement
-   eps = 1.5; // pourcentage équivalent à 1 '#' dans la barre
-   taille = 0;
-   max_it = atoi(nbr_img);
-   init_barre_chargement(barre,&taille,eps,max_it);
+   init_barre_chargement(barre,&taille,&eps,&max_it,nbr_img);
 
    temps_kernel1 = (double*) malloc(max_it*sizeof(double));
    temps_kernel2 = (double*) malloc(max_it*sizeof(double));
+   data_preparation(&bitmap,&width,&height,&pitch,&sz_in_bytes,&img,&d_img,&blockDim_x,&blockDim_y,&gridDim_x,&gridDim_y,&blockDim_x_ascii,&blockDim_y_ascii,
+                    &gridDim_x_ascii,&gridDim_y_ascii,&nb_sleep_thread_x,&nb_sleep_thread_y,&nb_sleep_thread_x_ascii,&nb_sleep_thread_y_ascii,atof(argv[1]),
+                    &sz_in_bytes_img_ascii,&img_ascii,&d_img_ascii,ascii,&blockDim_x_color, &blockDim_y_color,&gridDim_x_color,&gridDim_y_color,&nb_sleep_thread_x_color,
+                    &nb_sleep_thread_y_color,&sz_in_bytes_ascii_color,&width_color,&height_color,&img_ascii_color_final,&d_img_ascii_color_final,&bitmap_final,&pitch_final);
 
+   FreeImage_Initialise();
    start = get_time();
    for(int k=0; k<max_it;k++){
 
       barre_chargement(barre,100*(k+1)/max_it,k+1,max_it,eps,taille);
-
       char PathName[100] = "images/frame";
       sprintf(num, "%d", k);
       strcat(PathName, num);
       strcat(PathName,".jpg");
 
-      FreeImage_Initialise();
-
-      // load and decode a regular file
-      FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(PathName);
-      FIBITMAP* bitmap = FreeImage_Load(FIF_JPEG, PathName, 0);
-
-      if(k==0){
-         declaration_1(bitmap,&width,&height,&pitch);
-         sz_in_bytes = sizeof(unsigned int) * 3 * width * height; //nb de valeurs pour toute image
-         img = (unsigned int*) malloc(sz_in_bytes);
-         cudaMalloc((void**)&d_img, sz_in_bytes);
-         gpuErrchk( cudaPeekAtLastError() );
-      }
+      bitmap = FreeImage_Load(FIF_JPEG, PathName, 0);
 
       REORDER_IMG(img,height,width,pitch,bitmap);
 
       cudaMemcpy(d_img, img, sz_in_bytes,cudaMemcpyHostToDevice);
       gpuErrchk( cudaPeekAtLastError() );
 
-      // //##############################################################################################
-      // //################################### Traitement ascii d'image #################################
-      // //##############################################################################################
-
-      if(k==0){
-         declaration_2(width,height,&blockDim_x,&blockDim_y,&gridDim_x,&gridDim_y,
-                     &blockDim_x_ascii,&blockDim_y_ascii,&gridDim_x_ascii,&gridDim_y_ascii,
-                     &nb_sleep_thread_x,&nb_sleep_thread_y,
-                     &nb_sleep_thread_x_ascii,&nb_sleep_thread_y_ascii,
-                     atof(argv[1]));
-         sz_in_bytes_img_ascii = sizeof(float)*gridDim_x_ascii*gridDim_y_ascii;
-         img_ascii = (float*) malloc(sz_in_bytes_img_ascii);
-         cudaMalloc((void**)&d_img_ascii, 4*sz_in_bytes_img_ascii);
-         gpuErrchk( cudaPeekAtLastError() );
-         // printf("\n\n GENERAL : \n blockDim_x = %d \n blockDim_y = %d \n gridDim_x = %d \n gridDim_y = %d \n nb_sleep_thread_x = %d \n nb_sleep_thread_y = %d\n",blockDim_x,blockDim_y,gridDim_x,gridDim_y,nb_sleep_thread_x,nb_sleep_thread_y);
-         // printf("\n ASCII : \n blockDim_x_ascii = %d \n blockDim_y_ascii = %d \n gridDim_x_ascii = %d \n gridDim_y_ascii = %d \n nb_sleep_thread_x_ascii = %d \n nb_sleep_thread_y_ascii = %d\n",blockDim_x_ascii,blockDim_y_ascii,gridDim_x_ascii,gridDim_y_ascii,nb_sleep_thread_x_ascii,nb_sleep_thread_y_ascii);
-         // printf("Le premier kernel lance une grille de taille %dx%d avec des blocks de taille %dx%d \n",gridDim_x,gridDim_y,blockDim_x,blockDim_y);
-         // printf("Le premier kernel doit prendre en compte une sous-grille de taille %dx%d avec des blocks de taille %dx%d \n",gridDim_x_ascii,gridDim_y_ascii,blockDim_x_ascii,blockDim_y_ascii);
-      }
-
-
       cudaMemset(d_img_ascii,0.,4*sz_in_bytes_img_ascii);                                                
-
       gpuErrchk( cudaPeekAtLastError() );
 
       dim3 dimBlock(blockDim_x,blockDim_y,1);
       dim3 dimGrid(gridDim_x,gridDim_y,1);
       start_kernel = get_time();
-      Niveau_Gris_Color_Moyennage<<<dimGrid, dimBlock>>>(d_img_ascii,d_img,width,nb_sleep_thread_x,nb_sleep_thread_y,nb_sleep_thread_x_ascii,
-                                                         nb_sleep_thread_y_ascii,gridDim_x_ascii,gridDim_y_ascii,blockDim_x_ascii,blockDim_y_ascii,k);
+      Niveau_Gris_Color_Moyennage<<<dimGrid, dimBlock>>>(d_img_ascii,d_img,width,nb_sleep_thread_x,nb_sleep_thread_y_ascii,
+                                                         gridDim_x_ascii,blockDim_x_ascii,blockDim_y_ascii);
       stop_kernel = get_time();
       temps_kernel1[k] = stop_kernel-start_kernel;
       gpuErrchk( cudaPeekAtLastError() );
-
-      if(k==0){
-         blockDim_x_color = ascii.kwidthCaracter; // 7 
-         blockDim_y_color = ascii.kheightCaracter; // 11
-         nb_sleep_thread_x_color = nb_sleep_thread_x_ascii;
-         nb_sleep_thread_y_color = nb_sleep_thread_y_ascii;
-         declaration_3(blockDim_x_color,blockDim_y_color,&gridDim_x_color,&gridDim_y_color,gridDim_x_ascii,gridDim_y_ascii,&sz_in_bytes_ascii_color,
-                       &width_color,&height_color);
-         // printf("\n\n GENERAL : \n blockDim_x_color = %d \n blockDim_y_color = %d \n gridDim_x_color = %d \n gridDim_y_color = %d \n nb_sleep_thread_x_color = %d \n nb_sleep_thread_y_color = %d\n",blockDim_x_color,blockDim_y_color,gridDim_x_color,gridDim_y_color,nb_sleep_thread_x_color,nb_sleep_thread_y_color);
-
-         img_ascii_color_final = (unsigned char*) malloc(sz_in_bytes_ascii_color);
-         cudaMalloc((void **)&d_img_ascii_color_final, sz_in_bytes_ascii_color); 
-         bitmap_final = FreeImage_Allocate(width_color,height_color, BPP);
-         pitch_final  = FreeImage_GetPitch(bitmap_final);
-      }  
     
       dim3 dimBlock_color(blockDim_x_color,blockDim_y_color,1);
       dim3 dimGrid_color(gridDim_x_color,gridDim_y_color,1);   
@@ -221,15 +173,14 @@ int main (int argc , char** argv)
                                                      atoi(argv[2]),atoi(argv[3]));
       stop_kernel = get_time();
       temps_kernel2[k] = stop_kernel-start_kernel; 
-      
       gpuErrchk( cudaPeekAtLastError() ); 
       
       cudaMemcpy(img_ascii_color_final, d_img_ascii_color_final, sz_in_bytes_ascii_color, cudaMemcpyDeviceToHost);   
-      
       gpuErrchk( cudaPeekAtLastError() );
 
       SAVE_IMG(img_ascii_color_final,height_color,width_color,pitch_final,bitmap_final,k);  // Créer le pitch&bitmap de img_ascii_color
    }
+   FreeImage_DeInitialise();
    stop = get_time();
    temps_ascii = stop-start;
    free(img);

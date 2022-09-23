@@ -20,7 +20,7 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 
 		/!\ EXEMPLE : ./modif_img 50 10 0 1
 
-##################################	Explication de l'executable Intsallation.sh	#################################################
+########################################	Explication de l'executable Intsallation.sh	###################################################################
 
 	1.	Pour pourvoir générer des PNG il faut installer ImageMagick: - sudo apt-get install imagemagick
 
@@ -42,4 +42,4 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 			- sudo apt install ffmpeg				(pour traiter le son et video)
 			- sudo pip install ffpyplayer				(pour traiter le son)
 
-#############################################################################################################################################
+###########################################################################################################################################################

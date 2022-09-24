@@ -13,8 +13,8 @@
 #include "host.cu"
 #include "device.cu"
 
-#define BPP 24
-#define NB_STREAMS 1
+#define BPP 24                                                                            // Bytes Per Pixels (24 => 3*8)
+#define NB_STREAMS 1                                                                      // NB_STREAMS > 1
 
 static int nb_streams;
 // Assemblage video python //
@@ -26,12 +26,13 @@ static double start,stop,start_kernel,stop_kernel,
 temps_reor,temps_ascii,temps_cut,temps_ass,
 temps_kernel1_moyen,temps_kernel2_moyen;                                                  // variables pour mesurer le temps
 static double *temps_kernel1,*temps_kernel2;                                              // pointeur tableau qui stock le temps des kernels à chaque itérations
+static char PathName[100];
 static char num[10];                                                                      // pour le numéro des iamges (framex.png)
 // Barre de chargement //
 static char barre[200] = "Traitement ascii des images";                                   //
 static float eps;                                                                         // pourcentage équivalent à 1 '#' dans la barre de chargement
 static int taille;                                                                        //
-static int max_it;                                                                      //
+static int max_it;                                                                        //
 // Pour le traitement d'images //
 static unsigned int blockDim_x;                                                           //
 static unsigned int blockDim_y;                                                           //
@@ -78,9 +79,7 @@ FIBITMAP *bitmap_final;
 FIBITMAP *bitmap;
 FREE_IMAGE_FORMAT fif;
 
-
-static cudaStream_t stream[NB_STREAMS];
-
+static cudaStream_t stream[NB_STREAMS];                                                   //
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -141,14 +140,8 @@ int main (int argc , char** argv)
    FreeImage_Initialise();
    start = get_time();
    for(int k=0; k<max_it;k=k+NB_STREAMS){
-      if(k+NB_STREAMS>=max_it && max_it%NB_STREAMS != 0){
-         nb_streams = max_it%NB_STREAMS;
-      }
-      barre_chargement(barre,100*(k+1)/max_it,k+1,max_it,eps,taille);
-      char PathName[100] = "images/frame";
-      sprintf(num, "%d", k);
-      strcat(PathName, num);
-      strcat(PathName,".jpg");
+
+      START_IT(barre,k,max_it,eps,taille,NB_STREAMS,&nb_streams,PathName,num);
 
       bitmap = FreeImage_Load(FIF_JPEG, PathName, 0);
 
@@ -160,6 +153,7 @@ int main (int argc , char** argv)
       cudaMemset(d_img_ascii,0.,4*sz_in_bytes_img_ascii);                                                
       gpuErrchk( cudaPeekAtLastError() );
 
+      //############################### FIRST KERNEL ######################################  
       dim3 dimBlock(blockDim_x,blockDim_y,1);
       dim3 dimGrid(gridDim_x,gridDim_y,1);
       start_kernel = get_time();
@@ -168,7 +162,10 @@ int main (int argc , char** argv)
       stop_kernel = get_time();
       temps_kernel1[k] = stop_kernel-start_kernel;
       gpuErrchk( cudaPeekAtLastError() );
+      //############################ END FIRST KERNEL ###################################### 
     
+
+      //############################## SECOND KERNEL #######################################   
       dim3 dimBlock_color(blockDim_x_color,blockDim_y_color,1);
       dim3 dimGrid_color(gridDim_x_color,gridDim_y_color,1);   
       
@@ -180,6 +177,7 @@ int main (int argc , char** argv)
       stop_kernel = get_time();
       temps_kernel2[k] = stop_kernel-start_kernel; 
       gpuErrchk( cudaPeekAtLastError() ); 
+      //############################ END SECOND KERNEL ######################################
       
       cudaMemcpy(img_ascii_color_final, d_img_ascii_color_final, sz_in_bytes_ascii_color, cudaMemcpyDeviceToHost);   
       gpuErrchk( cudaPeekAtLastError() );

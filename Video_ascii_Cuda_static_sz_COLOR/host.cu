@@ -47,7 +47,6 @@ __host__ void ARG_ERROR(int argc,char argv1,char argv2){
 
 }
 
-
 //#### Declaration des parametres
 __host__ void declaration_1(FIBITMAP *bitmap,unsigned *width,unsigned *height,unsigned *pitch){
     *width  = FreeImage_GetWidth(bitmap);
@@ -144,6 +143,18 @@ void barre_chargement(char *barre,float p,int k, int max_it, float eps,int taill
     printf("\r%s  %.2f%% ",barre,p);
     fflush(stdout);
   }
+}
+
+__host__ void START_IT(char *barre,int k, int max_it, float eps,int taille,int NB_STREAMS,int *nb_streams,char *PathName, char *num){
+  
+  if(k+NB_STREAMS>=max_it && max_it%NB_STREAMS != 0){
+    *nb_streams = max_it%NB_STREAMS;
+  }
+  barre_chargement(barre,100*(k+1)/max_it,k+1,max_it,eps,taille);
+  strcpy(PathName, "images/frame");
+  sprintf(num, "%d", k);
+  strcat(PathName, num);
+  strcat(PathName,".jpg");
 }
 
 //#### Permet de calculer le temps #####

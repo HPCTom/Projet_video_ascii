@@ -1,0 +1,32 @@
+
+Vous trouverez ci-joint les explications pour le bon fonctionnement de ce programme, suivre dans l'ordre les parties I,II,III et IV.
+
+	I	: Tout d'abord executer Installation.sh : bash Installation.sh	(va installer plusieurs packages, vous trouverez une explication de cet executable plus bas dans ce README)
+
+	II	: Pour utiliser le programme mettre la video (format mp4) que l'on souhaite transformer dans le dossier video.
+		
+		On peut utiliser par exemple https://notube.io/fr/youtube-app-v8 pour télécharger une video youtube au format mp4.
+
+	III	: Une fois la video dans le dossier video on COMPILE : make
+
+	IV	: Finalement le programme s'execute comme suit:
+
+		Execution: ./modif_img argv[1] argv[2] argv[3] argv[4]
+
+		argv[1] = pourcentage de résolution de l'image entre 0 et 100 en largeur (100% indique qu'il y aura autant d'ascii en largeur que de pixels)
+		argv[2] = couleur des ascii (noir(0) ou blanc(255) ou couleur(1))
+		argv[3] = couleur du fond (noir(0) ou blanc(255) ou couleur(1))
+		argv[4] = nom de la video à modifier
+
+		/!\ EXEMPLE : ./modif_img 50 0 1 my_video.mp4
+
+
+################################	Explication de l'executable Intsallation.sh	################################
+	 	
+	- sudo apt-get install libfreeimage3 libfreeimage-dev (lib pour le traitement d'images)
+	- sudo apt install python3-opencv	(pour traiter les videos)
+	- sudo apt-get install vlc		(pour lire les videos) 
+	- sudo apt install ffmpeg		(pour traiter le son et video)
+	- sudo pip install ffpyplayer		(pour traiter le son)
+
+#################################################################################################################

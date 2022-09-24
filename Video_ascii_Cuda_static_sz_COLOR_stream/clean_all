@@ -1,0 +1,23 @@
+echo -n "Voulez vous tout supprimer ? (y or n)"
+read answer
+answer=`echo $answer | tr [a-z] [A-Z]`
+
+if [ $answer = Y ]
+then
+
+make clean
+rm autre/temporaire/*
+rm images/*
+rm images_ascii/*
+rm video/*
+
+else
+
+make clean
+rm autre/temporaire/*
+rm images/*
+rm images_ascii/*
+rm video/ASCII*
+
+fi
+

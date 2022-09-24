@@ -145,11 +145,8 @@ void barre_chargement(char *barre,float p,int k, int max_it, float eps,int taill
   }
 }
 
-__host__ void START_IT(char *barre,int k, int max_it, float eps,int taille,int NB_STREAMS,int *nb_streams,char *PathName, char *num){
+__host__ void START_IT(char *barre,int k, int max_it, float eps,int taille,char *PathName, char *num){
   
-  if(k+NB_STREAMS>=max_it && max_it%NB_STREAMS != 0){
-    *nb_streams = max_it%NB_STREAMS;
-  }
   barre_chargement(barre,100*(k+1)/max_it,k+1,max_it,eps,taille);
   strcpy(PathName, "images/frame");
   sprintf(num, "%d", k);

@@ -14,7 +14,6 @@
 #include "device.cu"
 
 #define BPP 24                                                                            // Bytes Per Pixels (24 => 3*8)
-#define NB_STREAMS 1                                                                      // NB_STREAMS > 1
 
 static int nb_streams;
 // Assemblage video python //
@@ -79,8 +78,6 @@ FIBITMAP *bitmap_final;
 FIBITMAP *bitmap;
 FREE_IMAGE_FORMAT fif;
 
-static cudaStream_t stream[NB_STREAMS];                                                   //
-
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -139,9 +136,9 @@ int main (int argc , char** argv)
 
    FreeImage_Initialise();
    start = get_time();
-   for(int k=0; k<max_it;k=k+NB_STREAMS){
+   for(int k=0; k<max_it;k++){
 
-      START_IT(barre,k,max_it,eps,taille,NB_STREAMS,&nb_streams,PathName,num);
+      START_IT(barre,k,max_it,eps,taille,PathName,num);
 
       bitmap = FreeImage_Load(FIF_JPEG, PathName, 0);
 

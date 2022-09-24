@@ -20,20 +20,6 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 		/!\ EXEMPLE : ./modif_img 50 0 1
 
 ################################################	Explication de l'executable Intsallation.sh	########################################################
-
-	1.	Pour pourvoir générer des PNG il faut installer ImageMagick: - sudo apt-get install imagemagick
-
-		ImageMagick n'étant pas destiné principalement à l'utilisation que nous en avons faite il faut apporter quelques modifications à la bilibothèque. 
-		Il faut donc executer les 3 commandes suivantes:
-
-		- chmod 777 /etc/ImageMagick-6/policy.xml
-		- sudo rm /etc/ImageMagick-6/policy.xml
-		- sudo cp autre/EXAMPLE_policy.xml /etc/ImageMagick-6/policy.xml
-
-		Les modifiations portent sur le maximum des ressources allouées autorisé ainsi que sur des autorisations portant sur les formats *.txt. 
-		Pour les modifier il suffit de modifier le fichier "EXAMPLE_policy.xml" et de refaire les manipulations.
-
-	2.	D'autres bibliotheques seront necessaires:
 	 	
 			- sudo apt-get install libfreeimage3 libfreeimage-dev 	(lib pour le traitement d'images)
 			- sudo apt install python3-opencv			(pour traiter les videos)

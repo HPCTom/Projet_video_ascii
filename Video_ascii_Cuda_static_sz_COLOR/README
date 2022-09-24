@@ -1,15 +1,15 @@
 
 Vous trouverez ci-joint les explications pour le bon fonctionnement de ce programme, suivre dans l'ordre les parties I,II,III et IV.
 
-	I : Tout d'abord executer Installation.sh : bash Installation.sh	(va installer plusieurs packages, vous trouverez une explication de cet executable plus bas dans ce README)
+	I	: Tout d'abord executer Installation.sh : bash Installation.sh	(va installer plusieurs packages, vous trouverez une explication de cet executable plus bas dans ce README)
 
-	II : Pour utiliser le programme mettre la video (format mp4) que l'on souhaite transformer dans le dossier video.
+	II	: Pour utiliser le programme mettre la video (format mp4) que l'on souhaite transformer dans le dossier video.
 		
 		On peut utiliser par exemple https://notube.io/fr/youtube-app-v8 pour télécharger une video youtube au format mp4.
 
-	III : Une fois la video dans le dossier video on COMPILE : make
+	III	: Une fois la video dans le dossier video on COMPILE : make
 
-	IV : Finalement le programme s'execute comme suit:
+	IV	: Finalement le programme s'execute comme suit:
 
 		Execution: ./modif_img argv[1] argv[2] argv[3] argv[4]
 

@@ -14,7 +14,9 @@
 #include "device.cu"
 
 #define BPP 24
+#define NB_STREAMS 1
 
+static int nb_streams;
 // Assemblage video python //
 static char decoupe[100] = "python3 decoupe_vid.py ";                                     // appel focntion python pour découper la vidéo
 static char nbr_img[100] = {0};                                                           // nombre d'images dans la video
@@ -76,7 +78,9 @@ FIBITMAP *bitmap_final;
 FIBITMAP *bitmap;
 FREE_IMAGE_FORMAT fif;
 
-float *temp_img;
+
+static cudaStream_t stream[NB_STREAMS];
+
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -136,8 +140,10 @@ int main (int argc , char** argv)
 
    FreeImage_Initialise();
    start = get_time();
-   for(int k=0; k<max_it;k++){
-
+   for(int k=0; k<max_it;k=k+NB_STREAMS){
+      if(k+NB_STREAMS>=max_it && max_it%NB_STREAMS != 0){
+         nb_streams = max_it%NB_STREAMS;
+      }
       barre_chargement(barre,100*(k+1)/max_it,k+1,max_it,eps,taille);
       char PathName[100] = "images/frame";
       sprintf(num, "%d", k);

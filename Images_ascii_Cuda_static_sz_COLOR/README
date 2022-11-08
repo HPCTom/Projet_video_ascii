@@ -1,13 +1,17 @@
 
+################################################################################################
+    Ce programme est écrit en CUDA, il nécessite donc une carte graphique Nvidia.
+################################################################################################
+
 Vous trouverez ci-joint les explications pour le bon fonctionnement de ce programme, suivre dans l'ordre les parties I,II,III et IV.
 
 	I : Tout d'abord executer Installation.sh : bash Installation.sh (va installer plusieurs packages, vous trouverez une explication de cet executable plus bas dans ce README)
 
-	II : Pour utiliser le programme mettre la video (format mp4) que l'on souhaite transformer dans le dossier video.
-		
-		On peut utiliser par exemple https://notube.io/fr/youtube-app-v8 pour télécharger une video youtube au format mp4.
+	II : Pour utiliser le programme mettre les photos dans le dossier images. Les photos doivent etre nommée framex.jpeg avec allant de 0 j'usqu'au nombre d'images.
+	    
+	    images -> frame0.jpg,frame1.jpg,...,framex.jpg
 
-	III : Une fois la video dans le dossier video on COMPILE : make
+	III : Une fois les images dans le dossier image on COMPILE : make
 
 	IV : Finalement le programme s'execute comme suit:
 
@@ -22,9 +26,5 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 ################################################	Explication de l'executable Intsallation.sh	########################################################
 	 	
 			- sudo apt-get install libfreeimage3 libfreeimage-dev 	(lib pour le traitement d'images)
-			- sudo apt install python3-opencv			(pour traiter les videos)
-			- sudo apt-get install vlc				(pour lire les videos) 
-			- sudo apt install ffmpeg				(pour traiter le son et video)
-			- sudo pip install ffpyplayer				(pour traiter le son)
 
 ###################################################################################################################################################################

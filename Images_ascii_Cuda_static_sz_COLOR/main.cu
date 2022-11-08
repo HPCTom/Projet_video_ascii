@@ -106,6 +106,7 @@ int main (int argc , char** argv)
    printf("[------------------ TRAITEMENT ASCII DES IMAGES ------------------]\n\n");
    system("rm -r images_ascii/");
    system("mkdir images_ascii");
+   description_parametre(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
 
    FILE * f_img = popen("find images -type f | wc -l","r");
    fgets(nbr_img, 100, f_img); // calcul le nombre d'image à transformer
@@ -233,6 +234,8 @@ int main (int argc , char** argv)
 
    }
    stop = get_time();
+
+   printf("\n[------------------ \t\tTEMPS\t\t------------------]\n\n");
    cpu_time_used = stop-start;
    cudaFreeAsync(d_tab_ascii_lib,0);
 

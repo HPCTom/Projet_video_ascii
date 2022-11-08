@@ -2,6 +2,34 @@
 //################################### FONCTION HOST ############################################
 //##############################################################################################
 
+__host__ void description_parametre(int arg0, int arg1, int arg2){
+  char ascii[10];
+  char fond[10];
+  if(arg1 == 0){
+    sprintf(ascii, "%s", "noir");
+  }
+  else if (arg1 == 255){
+    sprintf(ascii, "%s", "blanc");
+  }
+  else{
+    sprintf(ascii, "%s", "couleur");
+  }
+
+  if(arg2 == 0){
+    sprintf(fond, "%s", "noir");
+  }
+  else if (arg2 == 255){
+    sprintf(fond, "%s", "blanc");
+  }
+  else{
+    sprintf(fond,"%s", "couleur");
+  }
+
+  
+  printf("Traduction ascii à %d%% avec ascii %s et fond %s \n",arg0,ascii,fond);
+
+}
+
 __host__ void error_msg(int msg_case,const char msg){
   switch(msg_case){
     case 0:

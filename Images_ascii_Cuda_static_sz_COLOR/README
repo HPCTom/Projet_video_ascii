@@ -22,6 +22,8 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 		argv[3] = couleur du fond ( noir -> 0 | blanc -> 255 | couleur -> 1 )
 
 		/!\ EXEMPLE : ./modif_img 10 0 1
+
+		Les résultats se trouvent dans le dossier "images_ascii".
 	
 	V : Vous pouvez egalement executer un script qui vous génèrera plusieurs dossiers contenant toutes les combinaisons (couleur ascii/couleur fond) pour des pourcentages de résolution entré par l'utilisateur.
 
@@ -30,6 +32,8 @@ Vous trouverez ci-joint les explications pour le bon fonctionnement de ce progra
 		argv[x] = pourcentage de résolution de l'image entre 0 et 100 en largeur (100% indique qu'il y aura autant d'ascii en largeur que de pixels)
 
 		/!\ EXEMPLE : bash script.sh 5 8 10 12 15
+
+		Les résultats se trouvent dans le dossier "images_ascii_script".
 
 ################################################	Explication de l'executable Intsallation.sh	########################################################
 	 	

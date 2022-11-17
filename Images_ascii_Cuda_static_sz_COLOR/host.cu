@@ -2,7 +2,7 @@
 //################################### FONCTION HOST ############################################
 //##############################################################################################
 
-__host__ void description_parametre(int arg0, int arg1, int arg2){
+__host__ void description_parametre(int arg0, int arg1, int arg2, int *max_it){
   char ascii[10];
   char fond[10];
   if(arg1 == 0){
@@ -25,9 +25,91 @@ __host__ void description_parametre(int arg0, int arg1, int arg2){
     sprintf(fond,"%s", "couleur");
   }
 
-  
-  printf("Traduction ascii à %d%% avec ascii %s et fond %s \n",arg0,ascii,fond);
+  char nbr_img[100] = {0}; 
 
+  FILE * f_img = popen("find images -type f | wc -l","r");
+  fgets(nbr_img, 100, f_img); // calcul le nombre d'image à transformer
+  pclose(f_img);
+  *max_it = atoi(nbr_img);
+
+  printf("Traduction ascii à %d%% avec ascii %s et fond %s pour %d images \n",arg0,ascii,fond,*max_it);
+
+}
+
+void list_dir(char *path,int *cpt,char **path_dir,int mode)
+{ 
+
+  DIR * d = opendir(path); // open the path
+  if(d==NULL) return; // if was not able, return
+  struct dirent * dir; // for the directory entries
+
+  while ((dir = readdir(d)) != NULL) // if we were able to read somehting from the directory
+    {
+
+      if(dir -> d_type == DT_DIR && strcmp(dir->d_name,".")!=0 && strcmp(dir->d_name,"..")!=0 && mode == 0 ) // if it is a directory
+      {
+        *cpt = *cpt+1;
+        char d_path[257]; // here I am using sprintf which is safer than strcat
+        sprintf(d_path, "%s/%s", path, dir->d_name);
+        list_dir(d_path,cpt,path_dir,0);
+      }
+      if(dir -> d_type == DT_DIR && strcmp(dir->d_name,".")!=0 && strcmp(dir->d_name,"..")!=0 && mode == 1 ) // if it is a directory
+      {
+        char d_path[257]; // here I am using sprintf which is safer than strcat
+        sprintf(d_path, "%s/%s", path, dir->d_name);
+        sprintf(path_dir[*cpt], "%s", d_path);
+        char ascii_path_dir[255] = "mkdir images_ascii";
+        strcat(ascii_path_dir, &path_dir[*cpt][6]);
+
+        //printf("%s \n",ascii_path_dir);
+        system(ascii_path_dir);
+
+        *cpt = *cpt+1;
+        list_dir(d_path,cpt,path_dir,1);
+        
+      }
+    }
+    closedir(d); // finally close the directory
+}
+
+void show_dir_content(char *path, int nb_img, char **path_img,int *ite)
+{ 
+
+  DIR * d = opendir(path); // open the path
+  if(d==NULL) return; // if was not able, return
+  struct dirent * dir; // for the directory entries
+
+  while ((dir = readdir(d)) != NULL) // if we were able to read somehting from the directory
+    {
+      if(dir-> d_type != DT_DIR)
+      { // if the type is not directory just print it with blue color
+        sprintf(path_img[*ite], "%s/%s", path,dir->d_name);
+        *ite = *ite+1;
+      }
+      else
+      if(dir -> d_type == DT_DIR && strcmp(dir->d_name,".")!=0 && strcmp(dir->d_name,"..")!=0 ) // if it is a directory
+      {
+        char d_path[257]; // here I am using sprintf which is safer than strcat
+        sprintf(d_path, "%s/%s", path, dir->d_name);
+        show_dir_content(d_path,nb_img,path_img,ite); // recall with the new path
+      }
+    }
+    closedir(d); // finally close the directory
+}
+
+__host__ void find_path_img(char **path_img, int *max_it){
+
+  char nbr_img[100] = {0}; 
+
+  FILE * f_img = popen("find images -type f | wc -l","r");
+  fgets(nbr_img, 100, f_img); // calcul le nombre d'image à transformer
+  pclose(f_img);
+
+  *max_it = atoi(nbr_img);
+  //printf("max_it = %d \n",*max_it);
+
+  int ite = 0;
+  show_dir_content("images",atoi(nbr_img),path_img,&ite);
 }
 
 __host__ void error_msg(int msg_case,const char msg){
@@ -153,7 +235,7 @@ void init_barre_chargement(char *barre,int *cpt,float eps,int max_it){
   strcat(barre, "]");
 }
 
-void barre_chargement(char *barre,float p,int k, float max, float eps,int taille){ //entier entre 0 et 100
+void barre_chargement(char *barre,float p,int k, int max, float eps,int taille){ //entier entre 0 et 100
 
   int idx = (int)(p/eps); // a quelle intervalle j'appartiens
 
@@ -201,19 +283,24 @@ __host__ void REORDER_IMG(unsigned int *img,int  height, int width,unsigned pitc
 }
 
 //#### Sauvergarde l'image finale #####
-__host__ void SAVE_IMG(unsigned char *img,unsigned int height,unsigned int width,unsigned int pitch,FIBITMAP* bitmap,int num){
+__host__ void SAVE_IMG(char *PathName,unsigned char *img,unsigned int height,unsigned int width,unsigned int pitch,FIBITMAP* bitmap,int num){
 
   FreeImage_Initialise();
   // FreeImage_SetTransparent(bitmap, TRUE);
-  int cpt = 1;
-  float val = (float)num;
-  while (val/10 > 1){
-    cpt = cpt+1;
-    val = val/10;
-  }
-  int size_PathDest = 22+cpt;
-  char PathDest[size_PathDest];                            // nom de l'image png de sortie
-  sprintf(PathDest,"images_ascii/frame%d.png", num);
+  // int cpt = 1;
+  // float val = (float)num;
+  // while (val/10 > 1){
+  //   cpt = cpt+1;
+  //   val = val/10;
+  // }
+  // int size_PathDest = 22+cpt;
+  // char PathDest[size_PathDest];                            // nom de l'image png de sortie
+  // sprintf(PathDest,"images_ascii/frame%d.png", num);
+  //strcpy(PathDest,PathName);
+
+
+  char PathDest[255] = "images_ascii";
+  strcat(PathDest, &PathName[6]);
 
   // for(int kk = 0; kk<sizeof(PathDest)+1;kk++){
   //   printf("%c",PathDest[kk]);
@@ -251,6 +338,7 @@ __host__ void SAVE_IMG(unsigned char *img,unsigned int height,unsigned int width
     // next line
     // bits += pitch;
   }
-  if( FreeImage_Save (FIF_PNG, bitmap , PathDest , 0 ))
+  //printf("%s \n",PathDest);
+  if( FreeImage_Save (FIF_JPEG, bitmap , PathDest , 0 ))
   FreeImage_DeInitialise(); //Cleanup !
 }

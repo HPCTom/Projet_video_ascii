@@ -1,4 +1,5 @@
 #include <iostream>
+#include <dirent.h> 
 #include <string.h>
 #include <cuda.h>
 #include <stdio.h>
@@ -17,18 +18,20 @@
 #define BPP 24
 
 // Assemblage video python //
-static char nbr_img[100] = {0};                                                           // nombre d'images dans la video
+//static char nbr_img[100] = {0};                                                           // nombre d'images dans la video
+static char **path_img;
+static char **path_dir;
 // Mesures temps //
 static double start,stop,start_kernel,stop_kernel,cpu_time_used,
 temps_kernel0_moyen,temps_kernel1_moyen,temps_kernel2_moyen,temps_kernel3_moyen,
 temps_kernel4_moyen;                                                                      // variables pour mesurer le temps
 static double *temps_kernel0,*temps_kernel1,*temps_kernel2,*temps_kernel3,*temps_kernel4; // pointeur tableau qui stock le temps des kernels à chaque itérations
-static char num[10];                                                                      // pour le numéro des iamges (framex.png)
+//static char num[10];                                                                      // pour le numéro des iamges (framex.png)
 // Barre de chargement //
 static char barre[200] = "Traitement ascii des images";                                   //
 static float eps;                                                                         // pourcentage équivalent à 1 '#' dans la barre de chargement
 static int taille;                                                                        //
-static float max_it;                                                                      //
+static int max_it;                                                                      //
 // Pour le traitement d'images //
 static unsigned int blockDim_x;                                                           //
 static unsigned int blockDim_y;                                                           //
@@ -93,7 +96,7 @@ int main (int argc , char** argv)
 
    printf("\n[------------------ Réordonnacement du tableau ASCII utilisé pour générer l'image (ordre croissant en niveau de gris) ------------------]\n\n");
    // ############ Librairie ascii ############
-   use_ascii = "@8&0a2{+*! ";
+   use_ascii = "@802{&a+*! ";
    // use_ascii = "8$&03421*! +@{a";
    nb_characters = strlen(use_ascii);
    lib_ascii ascii{use_ascii, use_ascii + nb_characters};
@@ -106,16 +109,25 @@ int main (int argc , char** argv)
    printf("[------------------ TRAITEMENT ASCII DES IMAGES ------------------]\n\n");
    system("rm -r images_ascii/");
    system("mkdir images_ascii");
-   description_parametre(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
+   description_parametre(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]),&max_it);
 
-   FILE * f_img = popen("find images -type f | wc -l","r");
-   fgets(nbr_img, 100, f_img); // calcul le nombre d'image à transformer
-   pclose(f_img);
+   path_img = (char**)malloc(max_it * sizeof(char*));
+      for (int i = 0; i < max_it; i++)
+         path_img[i] = (char*)malloc(255 * sizeof(char));
+   find_path_img(path_img,&max_it);
+
+   int cpt=0;
+   list_dir("images",&cpt,path_dir,0);
+   path_dir = (char**)malloc(cpt * sizeof(char*));
+       for (int i = 0; i < cpt; i++)
+           path_dir[i] = (char*)malloc(255 * sizeof(char));
+   cpt=0;
+   list_dir("images",&cpt,path_dir,1);
 
    // Pour la barre de chargement
    eps = 1.5; // pourcentage équivalent à 1 '#' dans la barre
    taille = 0;
-   max_it = atoi(nbr_img);
+   //max_it = atoi(nbr_img);
    init_barre_chargement(barre,&taille,eps,max_it);
 
    temps_kernel0 = (double*) malloc(max_it*sizeof(double));
@@ -129,16 +141,24 @@ int main (int argc , char** argv)
 
       barre_chargement(barre,100*(k+1)/max_it,k+1,max_it,eps,taille);
 
-      char PathName[100] = "images/frame";
-      sprintf(num, "%d", k);
-      strcat(PathName, num);
-      strcat(PathName,".jpg");
+      // char num[10];
+      // char PathName[100] = "images/frame";
+      // sprintf(num, "%d", k);
+      // strcat(PathName, num);
+      // strcat(PathName,".jpg");
 
       FreeImage_Initialise();
 
       // load and decode a regular file
-      FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(PathName);
-      FIBITMAP* bitmap = FreeImage_Load(FIF_JPEG, PathName, 0);
+
+      //printf("path_img inner %s \n",PathName);
+      //printf("path_img inner %s \n",path_img[k]);
+
+
+      FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(path_img[k]);
+      FIBITMAP* bitmap = FreeImage_Load(FIF_JPEG, path_img[k], 0);
+      //FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(PathName);
+      //FIBITMAP* bitmap = FreeImage_Load(FIF_JPEG, PathName, 0);
 
 
       declaration_1(bitmap,&width,&height,&pitch);
@@ -221,7 +241,8 @@ int main (int argc , char** argv)
       gpuErrchk( cudaPeekAtLastError() );
       
       start_kernel = get_time();
-      SAVE_IMG(img_ascii_color_final,height_color,width_color,pitch_final,bitmap_final,k);  // Créer le pitch&bitmap de img_ascii_color
+      SAVE_IMG(path_img[k],img_ascii_color_final,height_color,width_color,pitch_final,bitmap_final,k);  // Créer le pitch&bitmap de img_ascii_color
+      //SAVE_IMG(PathName,img_ascii_color_final,height_color,width_color,pitch_final,bitmap_final,k);  // Créer le pitch&bitmap de img_ascii_color
       stop_kernel = get_time();
       temps_kernel4[k] = stop_kernel-start_kernel;
 

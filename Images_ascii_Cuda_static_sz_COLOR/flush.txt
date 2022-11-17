@@ -1,0 +1,4 @@
+flush memory gpu:
+
+    sudo fuser -v /dev/nvidia*
+    sudo kill -9 PID

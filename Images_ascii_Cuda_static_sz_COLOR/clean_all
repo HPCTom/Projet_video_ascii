@@ -7,17 +7,16 @@ then
 
 make clean
 rm autre/temporaire/*
-rm images/*
-rm images_ascii/*
-rm video/*
+rm -r images/*
+rm -r images_ascii/*
+rm -r images_ascii_script/*
 
 else
 
 make clean
-rm autre/temporaire/*
-rm images/*
-rm images_ascii/*
-rm video/ASCII*
+rm -r autre/temporaire/*
+rm -r images/*
+rm -r images_ascii/*
 
 fi
 

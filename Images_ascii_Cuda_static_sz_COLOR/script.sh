@@ -16,7 +16,7 @@ for PERCENT in $@
                             cd "images_ascii_script/""$PERCENT" && mkdir "$first""_""$second"                      
                             cd .. && cd ..           
                             ./modif_img $PERCENT $first $second                            
-                            cp images_ascii/*.png "images_ascii_script/""$PERCENT""/""$first""_""$second" 
+                            cp images_ascii/*.jpg "images_ascii_script/""$PERCENT""/""$first""_""$second" 
                         fi
                     done
             done

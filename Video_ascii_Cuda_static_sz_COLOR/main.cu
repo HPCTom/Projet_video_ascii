@@ -15,7 +15,6 @@
 
 #define BPP 24                                                                            // Bytes Per Pixels (24 => 3*8)
 
-static int nb_streams;
 // Assemblage video python //
 static char decoupe[100] = "python3 decoupe_vid.py ";                                     // appel focntion python pour découper la vidéo
 static char nbr_img[100] = {0};                                                           // nombre d'images dans la video
@@ -23,8 +22,8 @@ static char assemble[100] = "python3 assemble_vid.py ";                         
 // Mesures temps //
 static double start,stop,start_kernel,stop_kernel,
 temps_reor,temps_ascii,temps_cut,temps_ass,
-temps_kernel1_moyen,temps_kernel2_moyen;                                                  // variables pour mesurer le temps
-static double *temps_kernel1,*temps_kernel2;                                              // pointeur tableau qui stock le temps des kernels à chaque itérations
+temps_kernel1_moyen,temps_kernel2_moyen,temps_kernel_copy1_moyen;                                                  // variables pour mesurer le temps
+static double *temps_kernel1,*temps_kernel2,*temps_kernel_copy1;                                              // pointeur tableau qui stock le temps des kernels à chaque itérations
 static char PathName[100];
 static char num[10];                                                                      // pour le numéro des iamges (framex.png)
 // Barre de chargement //
@@ -127,6 +126,7 @@ int main (int argc , char** argv)
    // Pour la barre de chargement
    init_barre_chargement(barre,&taille,&eps,&max_it,nbr_img);
 
+   temps_kernel_copy1 = (double*) malloc(max_it*sizeof(double));
    temps_kernel1 = (double*) malloc(max_it*sizeof(double));
    temps_kernel2 = (double*) malloc(max_it*sizeof(double));
    data_preparation(&bitmap,&width,&height,&pitch,&sz_in_bytes,&img,&d_img,&blockDim_x,&blockDim_y,&gridDim_x,&gridDim_y,&blockDim_x_ascii,&blockDim_y_ascii,
@@ -144,7 +144,10 @@ int main (int argc , char** argv)
 
       REORDER_IMG(img,height,width,pitch,bitmap);
 
+      start_kernel = get_time();
       cudaMemcpy(d_img, img, sz_in_bytes,cudaMemcpyHostToDevice);
+      stop_kernel = get_time();
+      temps_kernel_copy1[k] = stop_kernel-start_kernel;
       gpuErrchk( cudaPeekAtLastError() );
 
       cudaMemset(d_img_ascii,0.,4*sz_in_bytes_img_ascii);                                                
@@ -192,11 +195,13 @@ int main (int argc , char** argv)
    cudaFreeAsync(d_img_ascii_color_final,0);
 
    printf("\nTemps moyen traitement ascii : %f secondes\n",temps_ascii/max_it);
-   temps_kernel1_moyen = 0, temps_kernel2_moyen = 0;
+   temps_kernel1_moyen = 0, temps_kernel2_moyen = 0,temps_kernel_copy1_moyen=0;
    for(int k=0; k<max_it;k++){
       temps_kernel1_moyen += temps_kernel1[k];
       temps_kernel2_moyen += temps_kernel2[k];
+      temps_kernel_copy1_moyen += temps_kernel_copy1[k];
    }
+   printf("Temps moyen de copie CPU/GPU :  %f secondes\n",temps_kernel1_moyen/max_it);
    printf("Temps moyen pour le traitement du kernel \"Niveau_Gris_Color_Moyennage\": %f secondes\n",temps_kernel1_moyen/max_it);
    printf("Temps moyen pour le traitement du kernel \"Image_Color\" : %f secondes\n",temps_kernel2_moyen/max_it);
    printf("\nTemps total traitement ascii : %f secondes\n\n",temps_ascii);

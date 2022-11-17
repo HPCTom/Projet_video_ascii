@@ -130,7 +130,7 @@ int main (int argc , char** argv)
    // Pour la barre de chargement
    init_barre_chargement(barre,&taille,&eps,&max_it,nbr_img);
 
-   temps_kernel1 = (double*) malloc(max_it*sizeof(double));
+   temps_kernel1 = (double*) malloc((int(max_it/4)+1)*sizeof(double));
    temps_kernel2 = (double*) malloc(max_it*sizeof(double));
    data_preparation(&bitmap1,&width,&height,&pitch,&sz_in_bytes,&img1,&img2,&img3,&img4,&d_img1,&d_img2,&d_img3,&d_img4,&blockDim_x,&blockDim_y,&gridDim_x,
                     &gridDim_y,&blockDim_x_ascii,&blockDim_y_ascii,&gridDim_x_ascii,&gridDim_y_ascii,&nb_sleep_thread_x,&nb_sleep_thread_y,&nb_sleep_thread_x_ascii,
@@ -169,10 +169,13 @@ int main (int argc , char** argv)
       cudaStreamCreate(&stream[2]);
       cudaStreamCreate(&stream[3]);
 
+      start_kernel = get_time();
       cudaMemcpyAsync(d_img1, img1, sz_in_bytes,cudaMemcpyHostToDevice,stream[0]);
       cudaMemcpyAsync(d_img2, img2, sz_in_bytes,cudaMemcpyHostToDevice,stream[1]);
       cudaMemcpyAsync(d_img3, img3, sz_in_bytes,cudaMemcpyHostToDevice,stream[2]);
       cudaMemcpyAsync(d_img4, img4, sz_in_bytes,cudaMemcpyHostToDevice,stream[3]);
+      stop_kernel = get_time();
+      temps_kernel1[int(k/4)] = stop_kernel-start_kernel;
       gpuErrchk( cudaPeekAtLastError() );
 
       cudaMemsetAsync(d_img_ascii1,0.,4*sz_in_bytes_img_ascii,stream[0]);      
@@ -185,7 +188,7 @@ int main (int argc , char** argv)
       //############################### FIRST KERNEL ######################################  
       dim3 dimBlock(blockDim_x,blockDim_y,1);
       dim3 dimGrid(gridDim_x,gridDim_y,1);
-      // start_kernel = get_time();
+      //start_kernel = get_time();
       Niveau_Gris_Color_Moyennage<<<dimGrid, dimBlock, 0, stream[0]>>>(d_img_ascii1,d_img1,width,nb_sleep_thread_x,nb_sleep_thread_y_ascii,gridDim_x_ascii,blockDim_x_ascii,blockDim_y_ascii);
       Niveau_Gris_Color_Moyennage<<<dimGrid, dimBlock, 0, stream[1]>>>(d_img_ascii2,d_img2,width,nb_sleep_thread_x,nb_sleep_thread_y_ascii,gridDim_x_ascii,blockDim_x_ascii,blockDim_y_ascii);
       Niveau_Gris_Color_Moyennage<<<dimGrid, dimBlock, 0, stream[2]>>>(d_img_ascii3,d_img3,width,nb_sleep_thread_x,nb_sleep_thread_y_ascii,gridDim_x_ascii,blockDim_x_ascii,blockDim_y_ascii);
@@ -259,11 +262,12 @@ int main (int argc , char** argv)
    cudaFreeAsync(d_img_ascii_color_final4,0);
 
    printf("\nTemps moyen traitement ascii : %f secondes\n",temps_ascii/max_it);
-   // temps_kernel1_moyen = 0, temps_kernel2_moyen = 0;
-   // for(int k=0; k<max_it;k++){
-   //    temps_kernel1_moyen += temps_kernel1[k];
-   //    temps_kernel2_moyen += temps_kernel2[k];
-   // }
+   temps_kernel1_moyen = 0, temps_kernel2_moyen = 0;
+   for(int k=0; k<int(max_it/4)+1;k++){
+      temps_kernel1_moyen += temps_kernel1[k];
+      // temps_kernel2_moyen += temps_kernel2[k];
+   }
+   printf("Temps copie 4 sterams %f secondes\n",temps_kernel1_moyen/(int(max_it/4)+1));
    // printf("Temps moyen pour le traitement du kernel \"Niveau_Gris_Color_Moyennage\": %f secondes\n",temps_kernel1_moyen/max_it);
    // printf("Temps moyen pour le traitement du kernel \"Image_Color\" : %f secondes\n",temps_kernel2_moyen/max_it);
    printf("\nTemps total traitement ascii : %f secondes\n\n",temps_ascii);
